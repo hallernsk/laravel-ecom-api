@@ -30,8 +30,6 @@ Route::middleware('auth:sanctum')->group(function () {
     Route::get('/orders/{id}', [OrderController::class, 'show']);
 });
 
-// Payment callback (public)
-// Route::post('/orders/{id}/confirm-payment/{token}', [OrderController::class, 'confirmPayment']);
 Route::post('/orders/{id}/confirm-payment', [OrderController::class, 'confirmPayment']);
 
 

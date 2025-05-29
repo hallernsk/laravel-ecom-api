@@ -36,7 +36,6 @@ class CartTest extends TestCase
         $product = Product::factory()->create();
         $token = $user->createToken('test-token')->plainTextToken;
 
-        // First add product to cart
         $this->withHeaders([
             'Authorization' => 'Bearer ' . $token,
         ])->postJson('/api/cart/add', [
@@ -44,7 +43,6 @@ class CartTest extends TestCase
             'quantity' => 1,
         ]);
 
-        // Then remove it
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $token,
         ])->deleteJson('/api/cart/remove', [
@@ -63,7 +61,6 @@ class CartTest extends TestCase
         $product = Product::factory()->create();
         $token = $user->createToken('test-token')->plainTextToken;
 
-        // Add product to cart
         $this->withHeaders([
             'Authorization' => 'Bearer ' . $token,
         ])->postJson('/api/cart/add', [
@@ -71,7 +68,6 @@ class CartTest extends TestCase
             'quantity' => 3,
         ]);
 
-        // View cart
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $token,
         ])->getJson('/api/cart');

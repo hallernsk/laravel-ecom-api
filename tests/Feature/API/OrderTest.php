@@ -20,7 +20,6 @@ class OrderTest extends TestCase
         $paymentMethod = PaymentMethod::factory()->create();
         $token = $user->createToken('test-token')->plainTextToken;
 
-        // Добавить продукт в корзину
         $this->withHeaders([
             'Authorization' => 'Bearer ' . $token,
         ])->postJson('/api/cart/add', [
@@ -28,7 +27,6 @@ class OrderTest extends TestCase
             'quantity' => 2,
         ]);
 
-        // Оформить заказ
         $response = $this->withHeaders([
             'Authorization' => 'Bearer ' . $token,
         ])->postJson('/api/checkout', [
@@ -51,7 +49,6 @@ class OrderTest extends TestCase
         $paymentMethod = PaymentMethod::factory()->create();
         $token = $user->createToken('test-token')->plainTextToken;
 
-        // Create some orders for the user
         $order = Order::factory()->create([
             'user_id' => $user->id,
             'status' => 'Оплачен',
