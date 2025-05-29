@@ -27,9 +27,9 @@ class CancelUnpaidOrders extends Command
      */
     public function handle()
     {
-        $count = Order::where('status', 'pending')
+        $count = Order::where('status', 'На оплату')
             ->where('created_at', '<', now()->subMinutes(2))
-            ->update(['status' => 'cancelled']);
+            ->update(['status' => 'Отменен']);
 
         $this->info("Cancelled orders: {$count}");
 

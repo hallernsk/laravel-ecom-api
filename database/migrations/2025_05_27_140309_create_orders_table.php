@@ -15,9 +15,8 @@ return new class extends Migration
         $table->id();
         $table->foreignId('user_id')->constrained();
         $table->foreignId('payment_method_id')->constrained();
-        $table->enum('status', ['pending', 'paid', 'cancelled'])->default('pending');
+        $table->enum('status', ['На оплату', 'Оплачен', 'Отменен'])->default('На оплату');
         $table->string('payment_link')->nullable();
-        $table->string('callback_url')->nullable();
         $table->decimal('total_amount', 10, 2);
         $table->timestamps();
         });

@@ -13,8 +13,8 @@ class PaymentController extends Controller
         // Находим заказ
         $order = Order::findOrFail($orderId);
         
-        // Проверяем, что заказ в статусе "pending"
-        if ($order->status !== 'pending') {
+        // Проверяем, что заказ в статусе "На оплату"
+        if ($order->status !== 'На оплату') {
             return response()->json([
                 'error' => 'Order is not in pending status',
             ], 400);
@@ -28,21 +28,16 @@ class PaymentController extends Controller
             ], 400);
         }
         
-        // Генерируем callback_url для API
-        $callbackUrl = url("/api/orders/{$orderId}/confirm-payment");
-        
-        // Сохраняем callback_url в заказе
-        $order->update([
-            'callback_url' => $callbackUrl,
-        ]);
-        
-        // Возвращаем информацию о платеже и callback_url
+        // Генерируем confirm_api_url для API
+        $confirmApiUrl = url("/api/orders/{$orderId}/confirm-payment");        
+     
+        // Возвращаем информацию о платеже и confirm_api_url
         return response()->json([
             'message' => 'Payment processing',
             'order_id' => $orderId,
             'payment_method' => $paymentMethodCode,
             'amount' => $order->total_amount,
-            'callback_url' => $callbackUrl
+            'confirm_api_url' => $confirmApiUrl
         ]);
     }
 }

@@ -39,7 +39,7 @@ public function checkout(Request $request)
     $order = Order::create([
         'user_id' => $user->id,
         'payment_method_id' => $paymentMethod->id,
-        'status' => 'pending',
+        'status' => 'На оплату',
         'total_amount' => $totalAmount,
     ]);
     
@@ -75,14 +75,14 @@ public function checkout(Request $request)
     {
         $order = Order::findOrFail($id);
     
-        if ($order->status !== 'pending') {
+        if ($order->status !== 'На оплату') {
             return response()->json([
                 'message' => 'Order is not in pending status',
             ], 400);
         }
     
         $order->update([
-            'status' => 'paid',
+            'status' => 'Оплачен',
         ]);
     
         return response()->json([
@@ -99,7 +99,7 @@ public function checkout(Request $request)
             ->where('user_id', $user->id);
         
         // Filter by status
-        if ($request->has('status') && in_array($request->status, ['pending', 'paid', 'cancelled'])) {
+        if ($request->has('status') && in_array($request->status, ['На оплату', 'Оплачен', 'Отменен'])) {
             $query->where('status', $request->status);
         }
         
@@ -107,7 +107,7 @@ public function checkout(Request $request)
         $direction = $request->input('sort_by_date', 'desc') === 'asc' ? 'asc' : 'desc';
         $query->orderBy('created_at', $direction);
         
-        $orders = $query->paginate(10);
+        $orders = $query->get();
         
         return response()->json($orders);
     }
