@@ -29,13 +29,11 @@ public function checkout(Request $request)
     
     $paymentMethod = PaymentMethod::findOrFail($request->payment_method_id);
     
-    // Calculate total amount
     $totalAmount = 0;
     foreach ($cart->items as $item) {
         $totalAmount += $item->product->price * $item->quantity;
     }
     
-    // Create order
     $order = Order::create([
         'user_id' => $user->id,
         'payment_method_id' => $paymentMethod->id,
@@ -43,7 +41,6 @@ public function checkout(Request $request)
         'total_amount' => $totalAmount,
     ]);
     
-    // Create order items
     foreach ($cart->items as $item) {
         OrderItem::create([
             'order_id' => $order->id,
@@ -53,14 +50,12 @@ public function checkout(Request $request)
         ]);
     }
     
-    // Generate payment link - без токена
     $paymentLink = url("/pay/{$order->id}/{$paymentMethod->code}");
     
     $order->update([
         'payment_link' => $paymentLink,
     ]);
     
-    // Delete cart
     $cart->items()->delete();
     $cart->delete();
     
