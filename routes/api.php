@@ -31,6 +31,7 @@ Route::middleware('auth:sanctum')->group(function () {
 });
 
 // Payment callback (public)
-Route::post('/orders/{id}/confirm-payment/{token}', [OrderController::class, 'confirmPayment']);
+// Route::post('/orders/{id}/confirm-payment/{token}', [OrderController::class, 'confirmPayment']);
+Route::post('/orders/{id}/confirm-payment', [OrderController::class, 'confirmPayment']);
 
 
