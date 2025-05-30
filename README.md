@@ -4,11 +4,13 @@
 
 #### Установка и запуск:
 
-git clone https://github.com/hallernsk/laravel-ecom-api.git
+git clone https://github.com/hallernsk/laravel-ecom-api
 
 cd laravel-ecom-api
 
 cp  .env.example  .env  *(настроить DB_CONNECTION)*
+
+php artisan key:generate
 
 composer install
 
@@ -19,7 +21,7 @@ php artisan serve
 #### REST API:
 
 Все методы API (кроме регистрации, входа, просмотра товаров) требуют токена в заголовке:  
-Authorization: Bearer <token> (используется sanctum)
+Authorization: Bearer <token> (используется Sanctum)
 
 Регистрация:  
 POST api/register  
