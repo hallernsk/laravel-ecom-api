@@ -4,7 +4,7 @@
 
 #### Установка и запуск:
 
-git clone https://github.com/hallernsk/laravel-ecom-api
+git clone https://github.com/hallernsk/laravel-ecom-api.git
 
 cd laravel-ecom-api
 
@@ -90,7 +90,11 @@ GET api/orders/{id}
 Логика отмены заказа реализована через command + Schedule  
 Чтобы заказы старше 2 минут получали статус "Отменен", нужно также настроить cron (в Linux).  
 
+#### API Документация:
 
+http://127.0.0.1:8000/api/documentation  (Swagger UI)
+
+Документация генерируется автоматически с помощью аннотаций в контроллерах (Swagger/OpenAPI).
 
 
 

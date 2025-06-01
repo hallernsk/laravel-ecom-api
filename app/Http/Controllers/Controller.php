@@ -2,6 +2,9 @@
 
 namespace App\Http\Controllers;
 
+/**
+ * @OA\Info(title="User API", version="1.0")
+ */
 abstract class Controller
 {
     //
