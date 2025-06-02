@@ -12,19 +12,16 @@ class PaymentMethodsTableSeeder extends Seeder
         PaymentMethod::factory()->create([
             'name' => 'Credit Card',
             'code' => 'credit_card',
-            'active' => true
         ]);
 
         PaymentMethod::factory()->create([
             'name' => 'PayPal',
             'code' => 'paypal',
-            'active' => true
         ]);
 
         PaymentMethod::factory()->create([
             'name' => 'Bank Transfer',
             'code' => 'bank_transfer',
-            'active' => true
         ]);
     }
 }

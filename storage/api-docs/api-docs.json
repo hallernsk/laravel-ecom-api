@@ -1,8 +1,9 @@
 {
     "openapi": "3.0.0",
     "info": {
-        "title": "User API",
-        "version": "1.0"
+        "title": "Laravel ecom API",
+        "description": "Документация REST API для онлайн магазина",
+        "version": "1.0.0"
     },
     "paths": {
         "/api/register": {
