@@ -8,11 +8,11 @@ git clone https://github.com/hallernsk/laravel-ecom-api.git
 
 cd laravel-ecom-api
 
+composer install  
+
 cp  .env.example  .env  *(настроить DB_CONNECTION)*
 
 php artisan key:generate
-
-composer install
 
 php artisan migrate --seed  (создаются 3 способа оплаты и 10 товаров)
 
