@@ -3,6 +3,7 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Order\CheckoutRequest;
 use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
@@ -44,12 +45,8 @@ class OrderController extends Controller
      *     @OA\Response(response=400, description="Cart is empty or invalid data")
      * )
      */
-public function checkout(Request $request)
+public function checkout(CheckoutRequest $request)
 {
-    $request->validate([
-        'payment_method_id' => 'required|exists:payment_methods,id',
-    ]);
-
     $user = $request->user();
     $cart = Cart::with('items.product')->where('user_id', $user->id)->first();
     

@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
@@ -45,14 +47,8 @@ class AuthController extends Controller
      *     @OA\Response(response=422, description="Ошибка валидации")
      * )
      */
-    public function register(Request $request)
+    public function register(RegisterRequest $request)
     {
-        $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
-
         $user = User::create([
             'name' => $request->name,
             'email' => $request->email,
@@ -92,13 +88,8 @@ class AuthController extends Controller
      *     )
      * )
      */
-    public function login(Request $request)
+    public function login(LoginRequest $request)
     {
-        $request->validate([
-            'email' => 'required|email',
-            'password' => 'required',
-        ]);
-
         if (!Auth::attempt($request->only('email', 'password'))) {
             throw ValidationException::withMessages([
                 'email' => ['The provided credentials are incorrect.'],

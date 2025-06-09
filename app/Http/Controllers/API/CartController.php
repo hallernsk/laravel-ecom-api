@@ -3,6 +3,8 @@
 namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
+use App\Http\Requests\Cart\AddItemRequest;
+use App\Http\Requests\Cart\RemoveItemRequest;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
@@ -41,13 +43,8 @@ class CartController extends Controller
      *     @OA\Response(response=422, description="Ошибка валидации")
      * )
      */
-    public function addItem(Request $request)
+    public function addItem(AddItemRequest $request)
     {
-        $request->validate([
-            'product_id' => 'required|exists:products,id',
-            'quantity' => 'required|integer|min:1',
-        ]);
-
         $user = $request->user();
         $cart = Cart::firstOrCreate(['user_id' => $user->id]);
         
@@ -97,12 +94,8 @@ class CartController extends Controller
      *     )
      * )
      */
-    public function removeItem(Request $request)
+    public function removeItem(RemoveItemRequest $request)
     {
-        $request->validate([
-            'product_id' => 'required|exists:products,id',
-        ]);
-
         $user = $request->user();
         $cart = Cart::where('user_id', $user->id)->first();
         
