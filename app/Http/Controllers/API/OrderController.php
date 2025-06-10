@@ -8,6 +8,8 @@ use App\Models\Cart;
 use App\Models\Order;
 use App\Models\OrderItem;
 use App\Models\PaymentMethod;
+use App\Services\Order\OrderService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Str;
 
@@ -21,6 +23,17 @@ use Illuminate\Support\Str;
 class OrderController extends Controller
 {
 
+    protected $orderService;
+    
+    /**
+     * Конструктор с внедрением зависимости OrderService
+     *
+     * @param OrderService $orderService
+     */
+    public function __construct(OrderService $orderService)
+    {
+        $this->orderService = $orderService;
+    }
     /**
      * @OA\Post(
      *     path="/api/orders/checkout",
@@ -45,54 +58,24 @@ class OrderController extends Controller
      *     @OA\Response(response=400, description="Cart is empty or invalid data")
      * )
      */
-public function checkout(CheckoutRequest $request)
+public function checkout(CheckoutRequest $request): JsonResponse
 {
-    $user = $request->user();
-    $cart = Cart::with('items.product')->where('user_id', $user->id)->first();
-    
-    if (!$cart || $cart->items->isEmpty()) {
-        return response()->json([
-            'message' => 'Cart is empty',
-        ], 400);
-    }
-    
-    $paymentMethod = PaymentMethod::findOrFail($request->payment_method_id);
-    
-    $totalAmount = 0;
-    foreach ($cart->items as $item) {
-        $totalAmount += $item->product->price * $item->quantity;
-    }
-    
-    $order = Order::create([
-        'user_id' => $user->id,
-        'payment_method_id' => $paymentMethod->id,
-        'status' => 'На оплату',
-        'total_amount' => $totalAmount,
-    ]);
-    
-    foreach ($cart->items as $item) {
-        OrderItem::create([
-            'order_id' => $order->id,
-            'product_id' => $item->product_id,
-            'quantity' => $item->quantity,
-            'price' => $item->product->price,
-        ]);
-    }
-    
-    $paymentLink = url("/pay/{$order->id}/{$paymentMethod->code}");
-    
-    $order->update([
-        'payment_link' => $paymentLink,
-    ]);
-    
-    $cart->items()->delete();
-    $cart->delete();
-    
-    return response()->json([
-        'message' => 'Order created successfully',
-        'order' => $order,
-        'payment_link' => $paymentLink,
-    ]);
+        try {
+            $order = $this->orderService->checkout(
+                $request->user(),
+                $request->payment_method_id
+            );
+            
+            return response()->json([
+                'message' => 'Order created successfully',
+                'order' => $order,
+                'payment_link' => $order->payment_link,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+            ], 400);
+        }
 }
 
 
@@ -120,24 +103,20 @@ public function checkout(CheckoutRequest $request)
      *     @OA\Response(response=404, description="Order not found")
      * )
      */
-    public function confirmPayment($id)
+    public function confirmPayment($id): JsonResponse
     {
-        $order = Order::findOrFail($id);
-    
-        if ($order->status !== 'На оплату') {
+        try {
+            $order = $this->orderService->confirmPayment($id);
+            
             return response()->json([
-                'message' => 'Order is not in pending status',
+                'message' => 'Payment confirmed',
+                'order' => $order,
+            ]);
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
             ], 400);
         }
-    
-        $order->update([
-            'status' => 'Оплачен',
-        ]);
-    
-        return response()->json([
-            'message' => 'Payment confirmed',
-            'order' => $order,
-        ]);
     }
 
     /**
@@ -167,22 +146,13 @@ public function checkout(CheckoutRequest $request)
      * )
      */
 
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $user = $request->user();
-        $query = Order::with(['paymentMethod', 'items.product'])
-            ->where('user_id', $user->id);
-        
-        // Filter by status
-        if ($request->has('status') && in_array($request->status, ['На оплату', 'Оплачен', 'Отменен'])) {
-            $query->where('status', $request->status);
-        }
-        
-        // Sort by creation date
-        $direction = $request->input('sort_by_date', 'desc') === 'asc' ? 'asc' : 'desc';
-        $query->orderBy('created_at', $direction);
-        
-        $orders = $query->get();
+        $orders = $this->orderService->getUserOrders(
+            $request->user(),
+            $request->status,
+            $request->input('sort_by_date', 'desc')
+        );
         
         return response()->json($orders);
     }
@@ -208,13 +178,20 @@ public function checkout(CheckoutRequest $request)
      * )
      */
 
-    public function show($id, Request $request)
+    public function show($id, Request $request): JsonResponse
     {
-        $user = $request->user();
-        $order = Order::with(['paymentMethod', 'items.product'])
-            ->where('user_id', $user->id)
-            ->findOrFail($id);
-        
-        return response()->json($order);
+        try {
+            $order = $this->orderService->getUserOrder(
+                $request->user(),
+                $id
+            );
+
+            return response()->json($order);
+            
+        } catch (\Exception $e) {
+            return response()->json([
+                'message' => 'Order not found',
+            ], 404);
+        }
     }
 }

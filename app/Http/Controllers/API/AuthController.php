@@ -6,6 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\Auth\LoginRequest;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Models\User;
+use App\Services\Auth\AuthService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Support\Facades\Hash;
@@ -20,6 +22,17 @@ use Illuminate\Validation\ValidationException;
 
 class AuthController extends Controller
 {
+    protected $authService;
+
+    /**
+     * Конструктор с внедрением зависимости AuthService
+     *
+     * @param AuthService $authService
+     */
+    public function __construct(AuthService $authService)
+    {
+        $this->authService = $authService;
+    }
 
     /**
      * @OA\Post(
@@ -47,13 +60,13 @@ class AuthController extends Controller
      *     @OA\Response(response=422, description="Ошибка валидации")
      * )
      */
-    public function register(RegisterRequest $request)
+    public function register(RegisterRequest $request): JsonResponse
     {
-        $user = User::create([
-            'name' => $request->name,
-            'email' => $request->email,
-            'password' => Hash::make($request->password),
-        ]);
+        $user = $this->authService->register(
+            $request->name,
+            $request->email,
+            $request->password
+        );
 
         return response()->json([
             'message' => 'User registered successfully',
@@ -88,20 +101,23 @@ class AuthController extends Controller
      *     )
      * )
      */
-    public function login(LoginRequest $request)
+    public function login(LoginRequest $request): JsonResponse
     {
-        if (!Auth::attempt($request->only('email', 'password'))) {
-            throw ValidationException::withMessages([
-                'email' => ['The provided credentials are incorrect.'],
+        try {
+            $token = $this->authService->login(
+                $request->email,
+                $request->password
+            );
+
+            return response()->json([
+                'access_token' => $token,
+                'token_type' => 'Bearer',
             ]);
+        } catch (ValidationException $e) {
+            return response()->json([
+                'message' => $e->getMessage(),
+                'errors' => $e->errors(),
+            ], 401);
         }
-
-        $user = User::where('email', $request->email)->firstOrFail();
-        $token = $user->createToken('auth_token')->plainTextToken;
-
-        return response()->json([
-            'access_token' => $token,
-            'token_type' => 'Bearer',
-        ]);
     }
 }

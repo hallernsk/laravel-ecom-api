@@ -4,6 +4,8 @@ namespace App\Http\Controllers\API;
 
 use App\Http\Controllers\Controller;
 use App\Models\Product;
+use App\Services\Product\ProductService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
 /**
@@ -14,6 +16,13 @@ use Illuminate\Http\Request;
  */
 class ProductController extends Controller
 {
+
+    protected ProductService $productService;
+
+    public function __construct(ProductService $productService)
+    {
+        $this->productService = $productService;
+    }
 /**
  * @OA\Get(
  *     path="/api/products",
@@ -46,17 +55,11 @@ class ProductController extends Controller
  *     )
  * )
  */
-    public function index(Request $request)
+    public function index(Request $request): JsonResponse
     {
-        $query = Product::query();
-        
-        if ($request->has('sort_by_price')) {
-            $direction = $request->input('sort_by_price') === 'desc' ? 'desc' : 'asc';
-            $query->orderBy('price', $direction);
-        }
-        
-        $products = $query->paginate(10);;
-        
+        $sortByPrice = $request->input('sort_by_price');
+        $products = $this->productService->getProducts($sortByPrice);
+
         return response()->json($products);
     }
 
@@ -86,10 +89,10 @@ class ProductController extends Controller
  *     @OA\Response(response=404, description="Товар не найден")
  * )
  */
-    public function show($id)
+    public function show($id): JsonResponse
     {
-        $product = Product::findOrFail($id);
-        
+        $product = $this->productService->getProductById($id);
+
         return response()->json($product);
     }
 }

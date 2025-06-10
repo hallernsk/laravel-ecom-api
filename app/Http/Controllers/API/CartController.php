@@ -8,7 +8,10 @@ use App\Http\Requests\Cart\RemoveItemRequest;
 use App\Models\Cart;
 use App\Models\CartItem;
 use App\Models\Product;
+use App\Services\Cart\CartService;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Support\Js;
 
 /**
  * @OA\Tag(
@@ -19,6 +22,19 @@ use Illuminate\Http\Request;
 
 class CartController extends Controller
 {
+    protected $cartService;
+
+    /**
+     * Конструктор с внедрением зависимости CartService
+     *
+     * @param CartService $cartService
+     */
+    public function __construct(CartService $cartService)
+    {
+        $this->cartService = $cartService;
+    }
+
+
     /**
      * @OA\Post(
      *     path="/api/cart/add",
@@ -43,21 +59,12 @@ class CartController extends Controller
      *     @OA\Response(response=422, description="Ошибка валидации")
      * )
      */
-    public function addItem(AddItemRequest $request)
+    public function addItem(AddItemRequest $request): JsonResponse
     {
-        $user = $request->user();
-        $cart = Cart::firstOrCreate(['user_id' => $user->id]);
-        
-        $product = Product::findOrFail($request->product_id);
-        
-        $cartItem = CartItem::updateOrCreate(
-            [
-                'cart_id' => $cart->id,
-                'product_id' => $request->product_id,
-            ],
-            [
-                'quantity' => $request->quantity,
-            ]
+        $cartItem = $this->cartService->addItemToCart(
+            $request->user(),
+            $request->product_id,
+            $request->quantity
         );
         
         return response()->json([
@@ -94,22 +101,14 @@ class CartController extends Controller
      *     )
      * )
      */
-    public function removeItem(RemoveItemRequest $request)
+    public function removeItem(RemoveItemRequest $request): JsonResponse
     {
-        $user = $request->user();
-        $cart = Cart::where('user_id', $user->id)->first();
+        $result = $this->cartService->removeItemFromCart(
+            $request->user(),
+            $request->product_id
+        );
         
-        if (!$cart) {
-            return response()->json([
-                'message' => 'Cart not found',
-            ], 404);
-        }
-        
-        $deleted = CartItem::where('cart_id', $cart->id)
-            ->where('product_id', $request->product_id)
-            ->delete();
-        
-        if ($deleted) {
+        if ($result) {
             return response()->json([
                 'message' => 'Product removed from cart',
             ]);
@@ -141,8 +140,7 @@ class CartController extends Controller
      */
     public function getCart(Request $request)
     {
-        $user = $request->user();
-        $cart = Cart::with('items.product')->where('user_id', $user->id)->first();
+        $cart = $this->cartService->getCart($request->user());
         
         if (!$cart) {
             return response()->json([
